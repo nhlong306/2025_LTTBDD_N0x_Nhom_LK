@@ -1,0 +1,26 @@
+name: weather_app_final
+description: A new Flutter project for a weather app.
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Giao tiếp HTTP
+  http: ^0.13.6
+  # Lấy vị trí GPS
+  geolocator: ^10.1.0
+  # Quản lý trạng thái đơn giản
+  provider: ^6.0.5
+  # Định dạng ngày tháng
+  intl: ^0.18.1
+  # Tích hợp Lottie Animation
+  lottie: ^3.0.0 
+
+flutter:
+  uses-material-design: true
+  
+  # Khai báo thư mục chứa Lottie files
+  assets:
+    - assets/lottie/
