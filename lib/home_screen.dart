@@ -4,12 +4,11 @@ import 'weather_provider.dart';
 import 'weather_model.dart';
 import 'package:intl/intl.dart';
 import 'search_screen.dart';
-import 'package:lottie/lottie.dart'; // Import package Lottie
+import 'package:lottie/lottie.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  // ⚠️ HÀM MỚI: Trả về đường dẫn Lottie Animation
   String _getWeatherAnimation(String condition) {
     final lowerCondition = condition.toLowerCase();
 
@@ -17,22 +16,21 @@ class HomeScreen extends StatelessWidget {
       return 'assets/lottie/sun.json';
     } else if (lowerCondition.contains('cloud') ||
         lowerCondition.contains('overcast')) {
-      return 'assets/lottie/cloudy.json';
+      return 'assets/lottie/overcast.json';
     } else if (lowerCondition.contains('rain') ||
         lowerCondition.contains('drizzle')) {
       return 'assets/lottie/rain.json';
     } else if (lowerCondition.contains('snow') ||
         lowerCondition.contains('sleet')) {
-      return 'assets/lottie/snow.json';
+      return 'assets/lottie/snow icon.json';
     } else if (lowerCondition.contains('fog') ||
         lowerCondition.contains('mist')) {
-      return 'assets/lottie/fog.json';
+      return 'assets/lottie/Weather Day - mist.json';
     } else if (lowerCondition.contains('thunder') ||
         lowerCondition.contains('storm')) {
-      return 'assets/lottie/thunder.json';
+      return 'assets/lottie/Weather-thunder.json';
     }
 
-    // Animation mặc định nếu không khớp
     return 'assets/lottie/default.json';
   }
 
@@ -49,7 +47,6 @@ class HomeScreen extends StatelessWidget {
     return [Colors.blue.shade400, Colors.lightBlue.shade100];
   }
 
-  // Hàm Icon này vẫn cần thiết cho danh sách dự báo (ít tối ưu hơn nếu dùng Lottie ở đây)
   IconData _getWeatherIcon(String condition) {
     final lowerCondition = condition.toLowerCase();
     if (lowerCondition.contains('sun') || lowerCondition.contains('clear')) {
@@ -110,18 +107,18 @@ class HomeScreen extends StatelessWidget {
               child: CustomScrollView(
                 slivers: [
                   _buildCustomAppBar(context, provider, weather.city),
-                  _buildCurrentWeatherDetails(
-                      weather), // KHÔNG cần truyền getIcon
+                  _buildCurrentWeatherDetails(weather),
 
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Text(
                         'Thông tin chi tiết',
+                        // ⚠️ Sửa lỗi const: Bỏ const và dùng màu hằng số
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800),
+                            color: const Color(0xFF424242)), // Màu xám 800
                       ),
                     ),
                   ),
@@ -132,14 +129,20 @@ class HomeScreen extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                       child: Text(
                         'Dự báo 10 ngày tới',
+                        // ⚠️ Sửa lỗi const: Bỏ const và dùng màu hằng số
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800),
+                            color: const Color(0xFF424242)), // Màu xám 800
                       ),
                     ),
                   ),
                   _buildForecastList(weather),
+
+                  // ⚠️ KHOẢNG TRỐNG AN TOÀN (Sẵn sàng cho Commit 2)
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: 30),
+                  ),
                 ],
               ),
             ),
@@ -206,13 +209,13 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // ⚠️ SỬ DỤNG LOTTIE.ASSET THAY VÌ ICON
                 Lottie.asset(
                   _getWeatherAnimation(weather.condition),
                   width: 150,
                   height: 150,
                 ),
                 const SizedBox(height: 10),
+                // ⚠️ Sửa lỗi const: Xóa const
                 Text(
                   '${weather.tempC.round()}°C',
                   style: const TextStyle(
@@ -271,8 +274,10 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(key,
-                      style:
-                          TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                      // ⚠️ Sửa lỗi const: Đã sửa Colors.grey.shade600 thành const Color
+                      style: const TextStyle(
+                          fontSize: 12,
+                          color: Color.fromRGBO(117, 117, 117, 1))),
                   const SizedBox(height: 4),
                   Text(value,
                       style: const TextStyle(
