@@ -124,10 +124,9 @@ class HomeScreen extends StatelessWidget {
                         child: Text(
                           'Thông tin chi tiết',
                           style: const TextStyle(
-                              // Sử dụng const TextStyle
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF424242)), // Màu xám 800
+                              color: Color(0xFF424242)),
                         ),
                       ),
                     ),
@@ -139,10 +138,9 @@ class HomeScreen extends StatelessWidget {
                         child: Text(
                           'Dự báo 10 ngày tới',
                           style: const TextStyle(
-                              // Sử dụng const TextStyle
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF424242)), // Màu xám 800
+                              color: Color(0xFF424242)),
                         ),
                       ),
                     ),
@@ -229,7 +227,6 @@ class HomeScreen extends StatelessWidget {
                   height: 150,
                 ),
                 const SizedBox(height: 10),
-                // Xóa const do sử dụng biến không phải hằng số (weather.tempC)
                 Text(
                   '${weather.tempC.round()}°C',
                   style: const TextStyle(
@@ -250,7 +247,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // 3. Chi tiết (Grid)
+  // 3. Chi tiết (Grid) - ĐÃ CÓ HIỆU ỨNG GLASSMORPHISM NHẸ
   Widget _buildDetailGrid(Weather weather) {
     final details = {
       'Độ ẩm': '${weather.humidity}%',
@@ -268,7 +265,7 @@ class HomeScreen extends StatelessWidget {
       sliver: SliverGrid.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 2.5,
+          childAspectRatio: 2.2, // Tăng nhẹ chiều cao
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
         ),
@@ -276,25 +273,39 @@ class HomeScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final key = details.keys.elementAt(index);
           final value = details.values.elementAt(index);
-          return Card(
-            elevation: 2,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(key,
-                      style: const TextStyle(
-                          fontSize: 12,
-                          color: Color.fromRGBO(117, 117, 117, 1))),
-                  const SizedBox(height: 4),
-                  Text(value,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.bold)),
-                ],
+
+          return ClipRRect(
+            // Dùng ClipRRect để làm mờ
+            borderRadius: BorderRadius.circular(18), // Bo tròn lớn hơn
+            child: Container(
+              // Hiệu ứng Glassmorphism nhẹ
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2), // Nền trắng trong suốt
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1.0,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(key,
+                        style: TextStyle(
+                            fontSize: 12,
+                            color:
+                                Colors.white.withOpacity(0.8), // Chữ trắng mờ
+                            fontWeight: FontWeight.w400)),
+                    const SizedBox(height: 4),
+                    Text(value,
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white)), // Chữ trắng nổi bật
+                  ],
+                ),
               ),
             ),
           );
@@ -303,7 +314,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // 4. Dự báo 10 ngày
+  // 4. Dự báo 10 ngày - ĐÃ CÓ HIỆU ỨNG TRONG SUỐT VÀ NHẸ HƠN
   Widget _buildForecastList(Weather weather) {
     return SliverPadding(
       padding: const EdgeInsets.only(bottom: 20.0),
@@ -325,20 +336,28 @@ class HomeScreen extends StatelessWidget {
           return Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-            child: Card(
-              elevation: 0.5,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+            child: Container(
+              decoration: BoxDecoration(
+                color:
+                    Colors.white.withOpacity(0.2), // Nền trắng trong suốt nhẹ
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: ListTile(
                 leading: Icon(_getWeatherIcon(forecast.condition),
-                    color: Colors.blueAccent),
+                    color: Colors.white), // Đổi màu icon thành trắng
                 title: Text(label,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Text(forecast.condition),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white)), // Chữ trắng
+                subtitle: Text(forecast.condition,
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.8))), // Chữ trắng mờ
                 trailing: Text(
                   '${forecast.maxTempC.round()}° / ${forecast.minTempC.round()}°',
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.white), // Chữ trắng
                 ),
               ),
             ),
