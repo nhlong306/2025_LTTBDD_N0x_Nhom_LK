@@ -9,6 +9,7 @@ import 'package:lottie/lottie.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  // HÀM: Trả về đường dẫn Lottie Animation
   String _getWeatherAnimation(String condition) {
     final lowerCondition = condition.toLowerCase();
 
@@ -34,6 +35,7 @@ class HomeScreen extends StatelessWidget {
     return 'assets/lottie/default.json';
   }
 
+  // HÀM: Trả về danh sách màu nền
   List<Color> _getBackgroundColors(String condition) {
     if (condition.toLowerCase().contains('sun') ||
         condition.toLowerCase().contains('clear')) {
@@ -47,6 +49,7 @@ class HomeScreen extends StatelessWidget {
     return [Colors.blue.shade400, Colors.lightBlue.shade100];
   }
 
+  // HÀM: Trả về Icon (Vẫn cần cho List dự báo 10 ngày)
   IconData _getWeatherIcon(String condition) {
     final lowerCondition = condition.toLowerCase();
     if (lowerCondition.contains('sun') || lowerCondition.contains('clear')) {
@@ -72,31 +75,15 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       body: Consumer<WeatherProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoading && provider.weatherData == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (provider.errorMessage != null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Text(
-                  'Lỗi: ${provider.errorMessage}\n\nVui lòng thử lại bằng cách vuốt xuống hoặc nhấn nút GPS.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.red.shade700),
-                ),
-              ),
-            );
-          }
           final weather = provider.weatherData;
-          if (weather == null) {
-            return const Center(
-                child: Text('Đang tải vị trí hoặc chưa có dữ liệu.'));
-          }
+          // Lấy thành phố để hiển thị trên AppBar, ngay cả khi đang tải hoặc lỗi
+          final city = weather?.city ?? 'Đang tải...';
+          final condition = weather?.condition ?? 'clear';
 
           return Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: _getBackgroundColors(weather.condition),
+                colors: _getBackgroundColors(condition),
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -106,43 +93,70 @@ class HomeScreen extends StatelessWidget {
               color: Colors.white,
               child: CustomScrollView(
                 slivers: [
-                  _buildCustomAppBar(context, provider, weather.city),
-                  _buildCurrentWeatherDetails(weather),
+                  // APPBAR: Luôn hiển thị (chứa nút Search và GPS)
+                  _buildCustomAppBar(context, provider, city),
 
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        'Thông tin chi tiết',
-                        // ⚠️ Sửa lỗi const: Bỏ const và dùng màu hằng số
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF424242)), // Màu xám 800
+                  // KIỂM TRA TRẠNG THÁI VÀ HIỂN THỊ NỘI DUNG TƯƠNG ỨNG
+                  if (provider.isLoading && weather == null)
+                    const SliverFillRemaining(
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (provider.errorMessage != null)
+                    SliverFillRemaining(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Text(
+                            'Lỗi: ${provider.errorMessage}\n\nVui lòng sử dụng nút Tìm kiếm (🔍) hoặc GPS (⛟) để thử lại.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.red.shade700),
+                          ),
+                        ),
+                      ),
+                    )
+                  else if (weather != null) ...[
+                    // HIỂN THỊ DỮ LIỆU BÌNH THƯỜNG
+                    _buildCurrentWeatherDetails(weather),
+
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          'Thông tin chi tiết',
+                          style: const TextStyle(
+                              // Sử dụng const TextStyle
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF424242)), // Màu xám 800
+                        ),
                       ),
                     ),
-                  ),
-                  _buildDetailGrid(weather),
+                    _buildDetailGrid(weather),
 
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                      child: Text(
-                        'Dự báo 10 ngày tới',
-                        // ⚠️ Sửa lỗi const: Bỏ const và dùng màu hằng số
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF424242)), // Màu xám 800
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                        child: Text(
+                          'Dự báo 10 ngày tới',
+                          style: const TextStyle(
+                              // Sử dụng const TextStyle
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF424242)), // Màu xám 800
+                        ),
                       ),
                     ),
-                  ),
-                  _buildForecastList(weather),
+                    _buildForecastList(weather),
 
-                  // ⚠️ KHOẢNG TRỐNG AN TOÀN (Sẵn sàng cho Commit 2)
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 30),
-                  ),
+                    // KHOẢNG TRỐNG AN TOÀN
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: 30),
+                    ),
+                  ] else
+                    const SliverFillRemaining(
+                      child: Center(
+                          child: Text('Đang tải vị trí hoặc chưa có dữ liệu.')),
+                    ),
                 ],
               ),
             ),
@@ -215,7 +229,7 @@ class HomeScreen extends StatelessWidget {
                   height: 150,
                 ),
                 const SizedBox(height: 10),
-                // ⚠️ Sửa lỗi const: Xóa const
+                // Xóa const do sử dụng biến không phải hằng số (weather.tempC)
                 Text(
                   '${weather.tempC.round()}°C',
                   style: const TextStyle(
@@ -238,7 +252,6 @@ class HomeScreen extends StatelessWidget {
 
   // 3. Chi tiết (Grid)
   Widget _buildDetailGrid(Weather weather) {
-    // ... (Giữ nguyên code) ...
     final details = {
       'Độ ẩm': '${weather.humidity}%',
       'Điểm Sương': '${weather.dewpointC.round()}°C',
@@ -274,7 +287,6 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(key,
-                      // ⚠️ Sửa lỗi const: Đã sửa Colors.grey.shade600 thành const Color
                       style: const TextStyle(
                           fontSize: 12,
                           color: Color.fromRGBO(117, 117, 117, 1))),
@@ -293,7 +305,6 @@ class HomeScreen extends StatelessWidget {
 
   // 4. Dự báo 10 ngày
   Widget _buildForecastList(Weather weather) {
-    // ... (Giữ nguyên code) ...
     return SliverPadding(
       padding: const EdgeInsets.only(bottom: 20.0),
       sliver: SliverList.builder(
@@ -319,9 +330,7 @@ class HomeScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
               child: ListTile(
-                leading: Icon(
-                    _getWeatherIcon(
-                        forecast.condition), // Vẫn dùng Icon cho List
+                leading: Icon(_getWeatherIcon(forecast.condition),
                     color: Colors.blueAccent),
                 title: Text(label,
                     style: const TextStyle(fontWeight: FontWeight.w600)),
