@@ -5,6 +5,7 @@ import 'weather_model.dart';
 import 'package:intl/intl.dart';
 import 'search_screen.dart';
 import 'package:lottie/lottie.dart';
+import 'group_info_screen.dart'; // <<< Import màn hình thông tin nhóm
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -32,7 +33,7 @@ class HomeScreen extends StatelessWidget {
       return 'assets/lottie/Weather-thunder.json';
     }
 
-    return 'assets/lottie/default.json';
+    return 'assets/lottie/sun.json'; // Default
   }
 
   // HÀM: Trả về danh sách màu nền
@@ -64,11 +65,11 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Gọi tải dữ liệu chỉ một lần sau khi build xong lần đầu tiên
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (Provider.of<WeatherProvider>(context, listen: false).weatherData ==
-          null) {
-        Provider.of<WeatherProvider>(context, listen: false)
-            .loadWeatherForCurrentLocation();
+      final provider = Provider.of<WeatherProvider>(context, listen: false);
+      if (provider.weatherData == null && !provider.isLoading) {
+        provider.loadWeatherForCurrentLocation();
       }
     });
 
@@ -76,7 +77,6 @@ class HomeScreen extends StatelessWidget {
       body: Consumer<WeatherProvider>(
         builder: (context, provider, child) {
           final weather = provider.weatherData;
-          // Lấy thành phố để hiển thị trên AppBar, ngay cả khi đang tải hoặc lỗi
           final city = weather?.city ?? 'Đang tải...';
           final condition = weather?.condition ?? 'clear';
 
@@ -93,13 +93,15 @@ class HomeScreen extends StatelessWidget {
               color: Colors.white,
               child: CustomScrollView(
                 slivers: [
-                  // APPBAR: Luôn hiển thị (chứa nút Search và GPS)
+                  // APPBAR: Luôn hiển thị (chứa nút Search, GPS VÀ Group Info)
                   _buildCustomAppBar(context, provider, city),
 
-                  // KIỂM TRA TRẠNG THÁI VÀ HIỂN THỊ NỘI DUNG TƯƠNG ỨNG
+                  // NỘI DUNG CHÍNH (Sử dụng if/else if/else trong list children)
                   if (provider.isLoading && weather == null)
                     const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
+                      child: Center(
+                          child:
+                              CircularProgressIndicator(color: Colors.white)),
                     )
                   else if (provider.errorMessage != null)
                     SliverFillRemaining(
@@ -109,7 +111,9 @@ class HomeScreen extends StatelessWidget {
                           child: Text(
                             'Lỗi: ${provider.errorMessage}\n\nVui lòng sử dụng nút Tìm kiếm (🔍) hoặc GPS (⛟) để thử lại.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.red.shade700),
+                            style: TextStyle(
+                                color: Colors.red.shade900,
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -118,32 +122,38 @@ class HomeScreen extends StatelessWidget {
                     // HIỂN THỊ DỮ LIỆU BÌNH THƯỜNG
                     _buildCurrentWeatherDetails(weather),
 
-                    SliverToBoxAdapter(
+                    // TIÊU ĐỀ CHI TIẾT
+                    const SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: EdgeInsets.all(16.0),
                         child: Text(
                           'Thông tin chi tiết',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF424242)),
+                              color: Colors.white),
                         ),
                       ),
                     ),
+
+                    // LƯỚI CHI TIẾT - ĐÃ SỬA LỖI CÚ PHÁP SLIVERPADDING
                     _buildDetailGrid(weather),
 
-                    SliverToBoxAdapter(
+                    // TIÊU ĐỀ DỰ BÁO
+                    const SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                        padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
                         child: Text(
                           'Dự báo 10 ngày tới',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF424242)),
+                              color: Colors.white),
                         ),
                       ),
                     ),
+
+                    // DANH SÁCH DỰ BÁO - ĐÃ SỬA LỖI CÚ PHÁP SLIVERPADDING
                     _buildForecastList(weather),
 
                     // KHOẢNG TRỐNG AN TOÀN
@@ -153,7 +163,10 @@ class HomeScreen extends StatelessWidget {
                   ] else
                     const SliverFillRemaining(
                       child: Center(
-                          child: Text('Đang tải vị trí hoặc chưa có dữ liệu.')),
+                          child: Text(
+                        'Đang tải vị trí hoặc chưa có dữ liệu.',
+                        style: TextStyle(color: Colors.white),
+                      )),
                     ),
                 ],
               ),
@@ -164,7 +177,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // 1. Custom AppBar (SliverAppBar)
+  // 1. Custom AppBar (SliverAppBar) - CHỨA NÚT THÔNG TIN NHÓM
   Widget _buildCustomAppBar(
       BuildContext context, WeatherProvider provider, String city) {
     return SliverAppBar(
@@ -192,6 +205,7 @@ class HomeScreen extends StatelessWidget {
       ),
       centerTitle: true,
       actions: [
+        // Nút Tìm kiếm
         IconButton(
           icon: const Icon(Icons.search, color: Colors.white),
           onPressed: () {
@@ -201,12 +215,24 @@ class HomeScreen extends StatelessWidget {
             );
           },
         ),
+        // Nút GPS
         IconButton(
           icon: const Icon(Icons.gps_fixed, color: Colors.white),
           onPressed: () {
             provider.loadWeatherForCurrentLocation();
           },
         ),
+        // NÚT THÔNG TIN NHÓM <<< Đây là nút bạn cần nhấn
+        IconButton(
+          icon: const Icon(Icons.info_outline, color: Colors.white),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const GroupInfoScreen()),
+            );
+          },
+        ),
+        const SizedBox(width: 8),
       ],
     );
   }
@@ -247,7 +273,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // 3. Chi tiết (Grid) - ĐÃ CÓ HIỆU ỨNG GLASSMORPHISM NHẸ
+  // 3. Chi tiết (Grid) - HÀM TRẢ VỀ SLIVERPADDING ĐỂ CÓ THỂ DÙNG TRỰC TIẾP
   Widget _buildDetailGrid(Weather weather) {
     final details = {
       'Độ ẩm': '${weather.humidity}%',
@@ -260,12 +286,14 @@ class HomeScreen extends StatelessWidget {
       'Bình Minh/Hoàng Hôn': '${weather.sunrise} / ${weather.sunset}',
     };
 
+    // TRẢ VỀ SLIVERPADDING
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      // Đã đổi 'slivers' thành 'sliver' để khắc phục lỗi
       sliver: SliverGrid.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 2.2, // Tăng nhẹ chiều cao
+          childAspectRatio: 2.2,
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
         ),
@@ -275,12 +303,10 @@ class HomeScreen extends StatelessWidget {
           final value = details.values.elementAt(index);
 
           return ClipRRect(
-            // Dùng ClipRRect để làm mờ
-            borderRadius: BorderRadius.circular(18), // Bo tròn lớn hơn
+            borderRadius: BorderRadius.circular(18),
             child: Container(
-              // Hiệu ứng Glassmorphism nhẹ
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2), // Nền trắng trong suốt
+                color: Colors.white.withOpacity(0.2),
                 border: Border.all(
                   color: Colors.white.withOpacity(0.1),
                   width: 1.0,
@@ -295,15 +321,14 @@ class HomeScreen extends StatelessWidget {
                     Text(key,
                         style: TextStyle(
                             fontSize: 12,
-                            color:
-                                Colors.white.withOpacity(0.8), // Chữ trắng mờ
+                            color: Colors.white.withOpacity(0.8),
                             fontWeight: FontWeight.w400)),
                     const SizedBox(height: 4),
                     Text(value,
                         style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white)), // Chữ trắng nổi bật
+                            color: Colors.white)),
                   ],
                 ),
               ),
@@ -314,8 +339,9 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // 4. Dự báo 10 ngày - ĐÃ CÓ HIỆU ỨNG TRONG SUỐT VÀ NHẸ HƠN
+  // 4. Dự báo 10 ngày - HÀM TRẢ VỀ SLIVERPADDING ĐỂ CÓ THỂ DÙNG TRỰC TIẾP
   Widget _buildForecastList(Weather weather) {
+    // TRẢ VỀ SLIVERPADDING
     return SliverPadding(
       padding: const EdgeInsets.only(bottom: 20.0),
       sliver: SliverList.builder(
@@ -338,26 +364,23 @@ class HomeScreen extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
             child: Container(
               decoration: BoxDecoration(
-                color:
-                    Colors.white.withOpacity(0.2), // Nền trắng trong suốt nhẹ
+                color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: ListTile(
                 leading: Icon(_getWeatherIcon(forecast.condition),
-                    color: Colors.white), // Đổi màu icon thành trắng
+                    color: Colors.white),
                 title: Text(label,
                     style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white)), // Chữ trắng
+                        fontWeight: FontWeight.w600, color: Colors.white)),
                 subtitle: Text(forecast.condition,
-                    style: TextStyle(
-                        color: Colors.white.withOpacity(0.8))), // Chữ trắng mờ
+                    style: TextStyle(color: Colors.white.withOpacity(0.8))),
                 trailing: Text(
                   '${forecast.maxTempC.round()}° / ${forecast.minTempC.round()}°',
                   style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Colors.white), // Chữ trắng
+                      color: Colors.white),
                 ),
               ),
             ),
